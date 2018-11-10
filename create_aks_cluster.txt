@@ -1,0 +1,40 @@
+# Criar AKS Cluster no Azure, seguindo o artigo
+# https://docs.microsoft.com/en-us/azure/aks/kubernetes-walkthrough
+
+# Registar providers
+az provider register -n Microsoft.Network
+az provider register -n Microsoft.Storage
+az provider register -n Microsoft.Compute
+az provider register -n Microsoft.ContainerService
+
+# Criar Resource Group
+az group create --name aksCluster_rg --location westeurope
+
+# Criar cluster
+# Size default já é "Standard_DS1_v2": características em https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sizes-general
+az aks create --resource-group aksCluster_rg --name aksCluster --location westeurope --node-count 1 --node-vm-size Standard_DS1_v2 --generate-ssh-keys
+
+# Instalar cliente de Kubernetes - kubectl
+az aks install-cli
+
+# Obter credentials para o cluster
+az aks get-credentials --resource-group aksCluster_rg --name aksCluster
+
+# Para testar que o kubectl está instalado
+kubectl get nodes
+
+# Para escalar o número de nós do cluster
+az aks scale --resource-group=aksCluster_rg --name=aksCluster --node-count 3
+
+# Para abrir o Kubernetes dashboard
+az aks browse --resource-group aksCluster_rg --name aksCluster
+
+######
+
+# Para fazer deploy de uma aplicação para o Cluster
+# 1) criar ficheiro .yaml que descreva o "desired state"
+# 2) correr o seguinte comando
+kubectl apply -f azure_app_vote.yaml
+
+# 3) ver o estado da criação do serviço com EXTERNAL-IP
+kubectl get service azure-vote-front --watch
